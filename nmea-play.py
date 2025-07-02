@@ -32,14 +32,13 @@ class ServeIterable:
     def __init__(self, port):
         self.port = port
         self.clients = []
-        self.server = None
 
     def new_client(self, reader, writer):
         self.clients.append(writer)
         print(f"Added client: {writer.transport.get_extra_info('peername')}")
 
     async def playback_loop(self, iterable):
-        self.server = await asyncio.start_server(self.new_client, port=self.port)
+        await asyncio.start_server(self.new_client, port=self.port)
         async for line in iterable:
             for client in self.clients:
                 try:
@@ -57,5 +56,4 @@ parser.add_argument('filename', help="An NMEA log file containing 'ZDA' timestam
 parser.add_argument('port', help="TCP port number to serve from (default 10110)", nargs='?', default=10110)
 args = parser.parse_args()
 
-serve = ServeIterable(args.port)
-asyncio.run(serve.playback_loop(next_nmea(args.filename)))
+asyncio.run(ServeIterable(args.port).playback_loop(next_nmea(args.filename)))
