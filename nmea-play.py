@@ -36,17 +36,19 @@ class ServeIterable:
 
     def new_client(self, reader, writer):
         self.clients.append(writer)
+        print(f"Added client: {writer.transport.get_extra_info('peername')}")
 
     async def playback_loop(self, iterable):
         self.server = await asyncio.start_server(self.new_client, port=self.port)
-        while (True):
-            async for line in iterable:
-                for client in self.clients:
-                    try:
-                        await client.drain()
-                        client.write(line.encode())
-                    except BrokenPipeError:
-                        self.clients.remove(client)
+        async for line in iterable:
+            for client in self.clients:
+                try:
+                    await client.drain()
+                    client.write(line.encode())
+                except BrokenPipeError:
+                    self.clients.remove(client)
+                    print(f"Lost client: {client.transport.get_extra_info('peername')}")
+            
 
 parser = argparse.ArgumentParser(
     description="Plays an NMEA log file through TCP with sensible timings."
