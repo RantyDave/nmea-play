@@ -44,7 +44,7 @@ class ServeIterable:
                 try:
                     await client.drain()
                     client.write(line.encode())
-                except BrokenPipeError:
+                except (BrokenPipeError, ConnectionResetError, TimeoutError):
                     self.clients.remove(client)
                     print(f"Lost client: {client.transport.get_extra_info('peername')}")
             
